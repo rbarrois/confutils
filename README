@@ -1,0 +1,7 @@
+ConfUtils
+=========
+
+The ConfUtils package provides enhanced config file handling tools, focused on
+writing a end-user program instead of the auto-generation approach of Python's
+``configparser``.
+
