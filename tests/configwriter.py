@@ -1,7 +1,8 @@
-# coding: utf-8
-# Copyright (c) 2010-2012 Raphaël Barrois
+# -*- coding: utf-8 -*-
+# This code is distributed under the LGPLv3+ license.
+# Copyright (c) 2012 Raphaël Barrois
 
-import unittest
+from .compat import unittest
 
 from confutils import configwriter
 
