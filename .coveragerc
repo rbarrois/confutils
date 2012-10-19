@@ -1,0 +1,18 @@
+# .coveragerc to control coverage.py
+# see http://nedbatchelder.com/code/coverage/config.html
+
+[run]
+branch = True
+data_file = reports/coverage_data
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    cover: ignore$
+    pass$
+    raise NotImplementedError
+    def __unicode__\(self\):$
+    if __name__ == .__main__.:$
+
+[html]
+directory = reports/htmlcov
