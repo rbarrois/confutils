@@ -318,18 +318,21 @@ class ConfigLineList(unittest.TestCase):
 
     def test_remove(self):
         l = configwriter.ConfigLineList(self.l1, self.l2, self.l3)
-        l.remove(self.l3)
+        removed = l.remove(self.l3)
+        self.assertEqual(1, removed)
         self.assertEqual([self.l1, self.l2], l.lines)
 
     def test_remove_duplicated(self):
         l = configwriter.ConfigLineList(self.l3, self.l3, self.l1, self.l3,
                 self.l2, self.l3)
-        l.remove(self.l3)
+        removed = l.remove(self.l3)
+
+        self.assertEqual(4, removed)
         self.assertEqual([self.l1, self.l2], l.lines)
 
     def test_remove_empty(self):
         l = configwriter.ConfigLineList()
-        l.remove(self.l1)
+        self.assertEqual(0, l.remove(self.l1))
         self.assertEqual([], l.lines)
 
     def test_update(self):
@@ -607,7 +610,7 @@ class SectionTestCase(unittest.TestCase):
         block2.append(self.l1)
         block2.append(self.l2)
 
-        s.remove(self.l1)
+        self.assertEqual(2, s.remove(self.l1))
 
         self.assertEqual([block1, block2], s.blocks)
         self.assertEqual([], block1.lines)
@@ -623,7 +626,7 @@ class SectionTestCase(unittest.TestCase):
         block2.append(self.l1)
         block2.append(self.l2)
 
-        s.remove(self.l3)
+        self.assertEqual(0, s.remove(self.l3))
 
         self.assertEqual([block1, block2], s.blocks)
         self.assertEqual([self.l1], block1.lines)
@@ -632,7 +635,7 @@ class SectionTestCase(unittest.TestCase):
     def test_remove_empty(self):
         """Test removing from an empty section."""
         s = configwriter.Section('foo')
-        s.remove(self.l1)
+        self.assertEqual(0, s.remove(self.l1))
 
         self.assertIsNone(s.extra_block)
         self.assertEqual([], s.blocks)
@@ -648,6 +651,10 @@ class ConfigFileTestCase(unittest.TestCase):
                 key='x', value='13')
         self.l4 = configwriter.ConfigLine(configwriter.ConfigLine.KIND_DATA,
                 key='x', value=None)
+        self.h_foo = configwriter.ConfigLine(configwriter.ConfigLine.KIND_HEADER,
+                header='foo')
+        self.h_bar = configwriter.ConfigLine(configwriter.ConfigLine.KIND_HEADER,
+                header='bar')
 
     def test_enter_block(self):
         c = configwriter.ConfigFile()
@@ -754,7 +761,7 @@ class ConfigFileTestCase(unittest.TestCase):
 
     def test_get_line_invalid_section(self):
         c = configwriter.ConfigFile()
-        self.assertRaises(KeyError, c.get_line, 'foo', self.l1)
+        self.assertEqual([], c.get_line('foo', self.l1))
 
     def test_get_line(self):
         c = configwriter.ConfigFile()
@@ -788,3 +795,330 @@ class ConfigFileTestCase(unittest.TestCase):
         self.assertIn('foo', c.sections)
         self.assertEqual(block, c.sections['foo'].blocks[0])
         self.assertEqual([self.l1], list(block))
+
+    def test_update_line_empty(self):
+        c = configwriter.ConfigFile()
+        updates = c.update_line('foo', self.l1, self.l3)
+
+        self.assertEqual(0, updates)
+        self.assertEqual([], c.blocks)
+
+    def test_update_line_absent(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l2)
+        updates = c.update_line('foo', self.l1, self.l3)
+
+        self.assertEqual(0, updates)
+        self.assertEqual([block], c.blocks)
+
+    def test_update_line_once(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        updates = c.update_line('foo', self.l1, self.l3, once=True)
+
+        self.assertEqual(1, updates)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual([self.l3, self.l3, self.l1], list(block.lines))
+
+    def test_update_line_many(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        updates = c.update_line('foo', self.l4, self.l3)
+
+        self.assertEqual(3, updates)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual([self.l3, self.l3, self.l3], list(block.lines))
+
+    def test_remove_line_empty(self):
+        c = configwriter.ConfigFile()
+
+        removed = c.remove_line('foo', self.l1)
+
+        self.assertEqual(0, removed)
+        self.assertEqual([], c.blocks)
+
+    def test_remove_line(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        removed = c.remove_line('foo', self.l3)
+
+        self.assertEqual(1, removed)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual([self.l1, self.l1], list(block))
+
+    def test_remove_line_many(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        removed = c.remove_line('foo', self.l4)
+
+        self.assertEqual(3, removed)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual([], list(block))
+
+    def test_get_empty(self):
+        c = configwriter.ConfigFile()
+
+        self.assertEqual([], list(c.get('foo', 'bar')))
+
+        c.enter_block('foo')
+        self.assertEqual([], list(c.get('foo', 'bar')))
+        self.assertEqual([], list(c.get('bar', 'foo')))
+
+    def test_get(self):
+        c = configwriter.ConfigFile()
+        c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        c.enter_block('bar')
+        c.insert_line(self.l3)
+        c.insert_line(self.l3)
+
+        lines = list(c.get('foo', 'x'))
+        self.assertEqual([self.l1, self.l3, self.l1], lines)
+
+    def test_add_empty(self):
+        c = configwriter.ConfigFile()
+        block = c.add('foo', 'x', '42')
+
+        self.assertEqual([], c.blocks)
+        self.assertEqual('foo', c.sections['foo'].name)
+        self.assertEqual([block], c.sections['foo'].blocks)
+        self.assertEqual(block, c.sections['foo'].extra_block)
+        self.assertEqual([self.l1], block.lines)
+
+    def test_add(self):
+        c = configwriter.ConfigFile()
+        orig_block = c.enter_block('foo')
+        c.insert_line(self.l1)
+
+        block = c.add('foo', 'y', '13')
+        self.assertEqual(block, orig_block)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual([block], c.sections['foo'].blocks)
+        self.assertIsNone(c.sections['foo'].extra_block)
+        self.assertEqual(self.l1, block.lines[0])
+        self.assertEqual('y', block.lines[1].key)
+
+    def test_add_duplicate(self):
+        c = configwriter.ConfigFile()
+        orig_block = c.enter_block('foo')
+        c.insert_line(self.l1)
+
+        block = c.add('foo', 'x', '42')
+        self.assertEqual(block, orig_block)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual([block], c.sections['foo'].blocks)
+        self.assertIsNone(c.sections['foo'].extra_block)
+        self.assertEqual([self.l1, self.l1], block.lines)
+
+    def test_add_or_update_empty(self):
+        c = configwriter.ConfigFile()
+        updated = c.add_or_update('foo', 'x', '42')
+
+        self.assertEqual(0, updated)
+        self.assertEqual([], c.blocks)
+        self.assertIsNone(c.current_block)
+        self.assertIn('foo', c.sections)
+        self.assertEqual(1, len(c.sections['foo'].blocks))
+        self.assertEqual([self.l1], c.sections['foo'].extra_block.lines)
+
+    def test_add_or_update(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+
+        updated = c.add_or_update('foo', 'x', '13')
+
+        self.assertEqual(1, updated)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual(block, c.current_block)
+        self.assertIn('foo', c.sections)
+        self.assertEqual(1, len(c.sections['foo'].blocks))
+        self.assertEqual([self.l3], block.lines)
+
+    def test_add_or_update_duplicate(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        updated = c.add_or_update('foo', 'x', '13')
+
+        self.assertEqual(3, updated)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual(block, c.current_block)
+        self.assertIn('foo', c.sections)
+        self.assertEqual(1, len(c.sections['foo'].blocks))
+        self.assertEqual([self.l3, self.l3, self.l3], block.lines)
+
+    def test_update_empty(self):
+        c = configwriter.ConfigFile()
+        updated = c.update('foo', 'x', '13')
+
+        self.assertEqual(0, updated)
+        self.assertEqual([], c.blocks)
+        self.assertIsNone(c.current_block)
+        self.assertEqual({}, c.sections)
+
+    def test_update(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        updated = c.update('foo', 'x', '13')
+
+        self.assertEqual(3, updated)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual(block, c.current_block)
+        self.assertEqual([self.l3, self.l3, self.l3], list(block))
+
+    def test_update_once(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        updated = c.update('foo', 'x', '13', once=True)
+
+        self.assertEqual(1, updated)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual(block, c.current_block)
+        self.assertEqual([self.l3, self.l3, self.l1], list(block))
+
+    def test_update_with_old(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        updated = c.update('foo', 'x', '13', old_value='13', once=True)
+
+        self.assertEqual(1, updated)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual(block, c.current_block)
+        self.assertEqual([self.l1, self.l3, self.l1], list(block))
+
+    def test_remove_empty(self):
+        c = configwriter.ConfigFile()
+        removed = c.remove('foo', '13')
+
+        self.assertEqual(0, removed)
+        self.assertEqual({}, c.sections)
+        self.assertEqual([], c.blocks)
+
+    def test_remove(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        removed = c.remove('foo', 'x')
+        self.assertEqual(3, removed)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual(block, c.current_block)
+        self.assertEqual([], list(block))
+
+    def test_remove_with_value(self):
+        c = configwriter.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        removed = c.remove('foo', 'x', '42')
+        self.assertEqual(2, removed)
+        self.assertEqual([block], c.blocks)
+        self.assertEqual(block, c.current_block)
+        self.assertEqual([self.l3], list(block))
+
+    def test_iter_empty(self):
+        c = configwriter.ConfigFile()
+        lines = list(c)
+
+        self.assertEqual([], lines)
+
+    def test_iter_header_only(self):
+        c = configwriter.ConfigFile()
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+
+        lines = list(c)
+        self.assertEqual([self.l1, self.l3], lines)
+
+    def test_iter_usual(self):
+        c = configwriter.ConfigFile()
+        c.insert_line(self.l1)
+        c.enter_block('foo')
+        c.insert_line(self.l3)
+        c.insert_line(self.l3)
+        c.enter_block('bar')
+        c.insert_line(self.l1)
+        c.insert_line(self.l1)
+
+        lines = list(c)
+        self.assertEqual([
+            self.l1,
+            self.h_foo,
+            self.l3,
+            self.l3,
+            self.h_bar,
+            self.l1,
+            self.l1,
+        ], lines)
+
+    def test_iter_extra(self):
+        c = configwriter.ConfigFile()
+        c.add('foo', 'x', '13')
+        c.add('bar', 'x', '42')
+        c.add('bar', 'x', '13')
+
+        lines = list(c)
+        self.assertEqual([
+            self.h_foo,
+            self.l3,
+            self.h_bar,
+            self.l1,
+            self.l3,
+        ], lines)
+
+    def test_iter_removed(self):
+        c = configwriter.ConfigFile()
+        c.enter_block('foo')
+        c.enter_block('bar')
+        c.add('foo', 'x', '13')
+        c.add('bar', 'x', '42')
+        c.add('bar', 'x', '13')
+
+        c.remove('foo', 'x')
+
+        lines = list(c)
+        self.assertEqual([
+            self.h_bar,
+            self.l1,
+            self.l3,
+        ], lines)
