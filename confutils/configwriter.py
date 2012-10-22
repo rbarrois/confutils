@@ -363,13 +363,21 @@ class ConfigFile(object):
     # =================
 
     def __iter__(self):
+        # First, the header
         for line in self.header:
             yield line
+
+        # Then the content of blocks
         for block in self.blocks:
+            if not block:
+                # Empty, skip
+                continue
+
             yield block.header_line()
             for line in block:
                 yield line
 
+        # Finally, extra block lines
         for section in self.sections.values():
             if section.extra_block:
                 yield section.extra_block.header_line()
