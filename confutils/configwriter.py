@@ -99,7 +99,9 @@ class ConfigLineList(object):
                 yield other_line
 
     def remove(self, line):
+        old_len = len(self.lines)
         self.lines = [l for l in self.lines if not l.match(line)]
+        return old_len - len(self.lines)
 
     def update(self, old_line, new_line, once=False):
         """Replace all lines matching `old_line` with `new_line`.
@@ -209,8 +211,11 @@ class Section(object):
 
     def remove(self, line):
         """Delete all lines matching the given line."""
+        nb = 0
         for block in self.blocks:
-            block.remove(line)
+            nb += block.remove(line)
+
+        return nb
 
     def __iter__(self):
         return iter(self.blocks)
@@ -252,7 +257,10 @@ class ConfigFile(object):
 
     def get_line(self, section, line):
         """Retrieve all lines compatible with a given line."""
-        section = self._get_section(section, create=False)
+        try:
+            section = self._get_section(section, create=False)
+        except KeyError:
+            return []
         return section.find_lines(line)
 
     # Filling from lines
@@ -297,10 +305,25 @@ class ConfigFile(object):
         Returns:
             int: the number of updates performed
         """
-        return self._get_section(section).update(new_line, old_line, once=once)
+        try:
+            s = self._get_section(section, create=False)
+        except KeyError:
+            return 0
+        return s.update(old_line, new_line, once=once)
 
     def remove_line(self, section, line):
-        self._get_section(section, create=False).unset(line)
+        """Remove all instances of a line.
+
+        Returns:
+            int: the number of lines removed
+        """
+        try:
+            s = self._get_section(section, create=False)
+        except KeyError:
+            # No such section, skip.
+            return 0
+
+        return s.remove(line)
 
     # High-level API
     # ==============
@@ -317,10 +340,15 @@ class ConfigFile(object):
         return self.add_line(section, line)
 
     def add_or_update(self, section, key, value):
-        """Update the key or, if no previous value existed, add it."""
-        nb_updates = self.update(section, key, value)
-        if nb_updates == 0:
+        """Update the key or, if no previous value existed, add it.
+
+        Returns:
+            int: Number of updated lines.
+        """
+        updates = self.update(section, key, value)
+        if updates == 0:
             self.add(section, key, value)
+        return updates
 
     def update(self, section, key, new_value, old_value=None, once=False):
         old_line = self._make_line(key, old_value)
