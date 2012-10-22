@@ -262,6 +262,13 @@ class ConfigLineList(unittest.TestCase):
         l = configwriter.ConfigLineList(self.l1, self.l2, self.l3)
         self.assertEqual(3, len(l))
 
+    def test_bool(self):
+        l = configwriter.ConfigLineList()
+        self.assertFalse(l)
+
+        l = configwriter.ConfigLineList(self.l1)
+        self.assertTrue(l)
+
     def test_iter(self):
         l = configwriter.ConfigLineList(self.l1, self.l2, self.l3)
         self.assertEqual([self.l1, self.l2, self.l3], list(l))

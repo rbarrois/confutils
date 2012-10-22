@@ -118,6 +118,11 @@ class ConfigLineList(object):
     def __contains__(self, line):
         return any(self.find_lines(line))
 
+    def __bool__(self):
+        return bool(self.lines)
+
+    __nonzero__ = __bool__
+
     def __len__(self):
         return len(self.lines)
 
