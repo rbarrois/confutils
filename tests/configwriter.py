@@ -753,6 +753,39 @@ class ConfigFileTestCase(unittest.TestCase):
         self.assertEqual('bar', c.current_block.name)
         self.assertIn('bar', c.sections)
 
+    def test_parse_empty(self):
+        c = configwriter.ConfigFile()
+        c.parse([])
+        self.assertEqual([], c.blocks)
+        self.assertEqual({}, c.sections)
+        self.assertIsNone(c.current_block)
+
+    def test_parse_usual(self):
+        c = configwriter.ConfigFile()
+        c.parse([
+            '[foo]',
+            'x: 13',
+            'x: 42',
+        ])
+        self.assertIn('foo', c.sections)
+        self.assertEqual([c.current_block], c.blocks)
+        self.assertEqual([self.l3, self.l1], list(c.current_block))
+
+    def test_parse_alternate_lexer(self):
+        class MyParser(object):
+            def parse(p, lines):
+                for line in lines:
+                    yield self.l1
+
+        c = configwriter.ConfigFile()
+        c.parse([
+            '[foo]',
+            'x: 13',
+            'x: 42',
+        ], parser=MyParser())
+        self.assertEqual({}, c.sections)
+        self.assertEqual([self.l1, self.l1, self.l1], list(c.header))
+
     def test_get_line_undefined(self):
         c = configwriter.ConfigFile()
         c.enter_block('foo')

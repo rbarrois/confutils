@@ -287,6 +287,12 @@ class ConfigFile(object):
         else:
             self.insert_line(line)
 
+    def parse(self, fileobj, parser=None):
+        """Fill from a file-like object."""
+        parser = parser or Lexer()
+        for line in parser.parse(fileobj):
+            self.handle_line(line)
+
     # Updating config content
     # =======================
 
