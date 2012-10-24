@@ -13,5 +13,9 @@ exclude_lines =
     raise NotImplementedError
     if __name__ == .__main__.:$
 
+include =
+    confutils/*
+    tests/*
+
 [html]
 directory = reports/htmlcov
