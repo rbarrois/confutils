@@ -13,11 +13,11 @@ class Parser(object):
     re_blank_line = re.compile(r'^\s*(#.*)?$')
     re_data_line = re.compile(r'^([^:=]+)[:=](.*)$')
 
-    def parse(self, lines):
+    def parse(self, lines, name_hint=''):
         for rank, line in enumerate(lines):
-            yield self.parse_line(line, rank=rank)
+            yield self.parse_line(line, rank=rank, name_hint=name_hint)
 
-    def parse_line(self, line, rank=0):
+    def parse_line(self, line, rank=0, name_hint=''):
         header_match = self.re_section_header.match(line)
         if header_match:
             header = header_match.groups()[0]
@@ -33,7 +33,7 @@ class Parser(object):
         if blank_match:
             return ConfigLine(ConfigLine.KIND_BLANK, text=line)
 
-        raise ValueError("Invalid line %s at %s" % (line, rank))
+        raise ValueError("Invalid line %s at %s:%d" % (line, name_hint, rank))
 
 
 class ConfigLine(object):
@@ -287,10 +287,10 @@ class ConfigFile(object):
         else:
             self.insert_line(line)
 
-    def parse(self, fileobj, parser=None):
+    def parse(self, fileobj, name_hint='', parser=None):
         """Fill from a file-like object."""
         parser = parser or Parser()
-        for line in parser.parse(fileobj):
+        for line in parser.parse(fileobj, name_hint=name_hint):
             self.handle_line(line)
 
     # Updating config content

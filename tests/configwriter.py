@@ -773,7 +773,7 @@ class ConfigFileTestCase(unittest.TestCase):
 
     def test_parse_alternate_lexer(self):
         class MyParser(object):
-            def parse(p, lines):
+            def parse(p, lines, name_hint=''):
                 for line in lines:
                     yield self.l1
 
@@ -926,7 +926,7 @@ class ConfigFileTestCase(unittest.TestCase):
         c.insert_line(self.l3)
 
         lines = list(c.get('foo', 'x'))
-        self.assertEqual([self.l1, self.l3, self.l1], lines)
+        self.assertEqual(['42', '13', '42'], lines)
 
     def test_add_empty(self):
         c = configwriter.ConfigFile()
