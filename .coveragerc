@@ -8,10 +8,9 @@ data_file = reports/coverage_data
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
-    cover: ignore$
+    pragma: no cover$
     pass$
     raise NotImplementedError
-    def __unicode__\(self\):$
     if __name__ == .__main__.:$
 
 [html]
