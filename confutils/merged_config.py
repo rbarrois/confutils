@@ -19,11 +19,10 @@ class Default(object):
     def __hash__(self):
         return hash(self.value)
 
-    def __nonzero__(self):
-        return bool(self.value)
-
     def __bool__(self):
         return bool(self.value)
+
+    __nonzero__ = __bool__
 
     def __eq__(self, other):
         if not isinstance(other, Default):
@@ -58,6 +57,15 @@ class NormalizedDict(dict):
     def __setitem__(self, key, value):
         super(NormalizedDict, self).__setitem__(normalize_key(key), value)
 
+    def setdefault(self, key, default):
+        return super(NormalizedDict, self).setdefault(normalize_key(key), default)
+
+    def get(self, key, default=None):
+        return super(NormalizedDict, self).get(normalize_key(key), default)
+
+    def pop(self, key, *args):
+        return super(NormalizedDict, self).pop(normalize_key(key), *args)
+
 
 class DictNamespace(dict):
     """Convert a 'Namespace' into a dict-like object."""
@@ -71,7 +79,7 @@ class MergedConfig(object):
 
     Merges options from a set of dicts."""
 
-    def __init__(self, *options):
+    def __init__(self, *options, **kwargs):
         self.options = []
         for option in options:
             self.add_options(option)
@@ -117,14 +125,5 @@ class MergedConfig(object):
 
         return NoDefault
 
-    def get_tuple(self, key, default=(), separator=' '):
-        value = self.get(key, default)
-        if isinstance(value, basestring):
-            value = value.split(separator)
-        return tuple(value)
-
-    def __repr__(self):
+    def __repr__(self):   # pragma: no cover
         return '%s(%r)' % (self.__class__.__name__, self.options)
-
-    def __hash__(self):
-        return hash((self.__class__, self.options))
