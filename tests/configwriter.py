@@ -1155,3 +1155,17 @@ class ConfigFileTestCase(unittest.TestCase):
             self.l1,
             self.l3,
         ], lines)
+
+    def test_idempotent(self):
+        lines = [
+            '# Comment before',
+            '[foo]',
+            'x: 13',
+            '',
+            '[bar]',
+            'x: 42',
+        ]
+        c = configwriter.ConfigFile()
+        c.parse(lines)
+        out_lines = list(c)
+        self.assertEqual(lines, [str(l) for l in out_lines])
