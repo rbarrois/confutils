@@ -928,6 +928,28 @@ class ConfigFileTestCase(unittest.TestCase):
         lines = list(c.get('foo', 'x'))
         self.assertEqual(['42', '13', '42'], lines)
 
+    def test_get_one_empty(self):
+        c = configwriter.ConfigFile()
+
+        self.assertRaises(KeyError, c.get_one, 'foo', 'x')
+
+    def test_get_one_notfound(self):
+        c = configwriter.ConfigFile()
+        c.enter_block('foo')
+        c.insert_line(self.l1)
+
+        self.assertRaises(KeyError, c.get_one, 'foo', 'y')
+
+    def test_get_one(self):
+        c = configwriter.ConfigFile()
+        c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+
+        v = c.get_one('foo', 'x')
+        self.assertEqual('42', v)
+
     def test_add_empty(self):
         c = configwriter.ConfigFile()
         block = c.add('foo', 'x', '42')

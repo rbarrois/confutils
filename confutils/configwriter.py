@@ -338,8 +338,26 @@ class ConfigFile(object):
         return ConfigLine(ConfigLine.KIND_DATA, key=key, value=value)
 
     def get(self, section, key):
+        """Return the 'value' of all lines matching the section/key.
+
+        Yields:
+            values for matching lines.
+        """
         line = self._make_line(key)
-        return self.get_line(section, line)
+        for line in self.get_line(section, line):
+            yield line.value
+
+    def get_one(self, section, key):
+        """Retrieve the first value for a section/key.
+
+        Raises:
+            KeyError: If no line match the given section/key.
+        """
+        lines = iter(self.get(section, key))
+        try:
+            return lines.next()
+        except StopIteration:
+            raise KeyError("Key %s not found in %s" % (key, section))
 
     def add(self, section, key, value):
         line = self._make_line(key, value)
