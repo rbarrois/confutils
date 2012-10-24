@@ -135,9 +135,9 @@ class LineTestCase(unittest.TestCase):
         self.assertIn('bar', repr(l3))
 
 
-class LexerTestCase(unittest.TestCase):
+class ParserTestCase(unittest.TestCase):
     def test_parse_empty_line(self):
-        lexer = configwriter.Lexer()
+        lexer = configwriter.Parser()
         l = lexer.parse_line('')
         self.assertEqual(l.KIND_BLANK, l.kind)
         self.assertEqual('', l.text)
@@ -146,7 +146,7 @@ class LexerTestCase(unittest.TestCase):
         self.assertIsNone(l.header)
 
     def test_parse_space_line(self):
-        lexer = configwriter.Lexer()
+        lexer = configwriter.Parser()
         l = lexer.parse_line('  ')
         self.assertEqual(l.KIND_BLANK, l.kind)
         self.assertEqual('  ', l.text)
@@ -155,7 +155,7 @@ class LexerTestCase(unittest.TestCase):
         self.assertIsNone(l.header)
 
     def test_parse_commented_line(self):
-        lexer = configwriter.Lexer()
+        lexer = configwriter.Parser()
         l = lexer.parse_line(' # foo')
         self.assertEqual(l.KIND_BLANK, l.kind)
         self.assertEqual(' # foo', l.text)
@@ -164,7 +164,7 @@ class LexerTestCase(unittest.TestCase):
         self.assertIsNone(l.header)
 
     def test_parse_data_line(self):
-        lexer = configwriter.Lexer()
+        lexer = configwriter.Parser()
         l = lexer.parse_line('foo: bar')
         self.assertEqual(l.KIND_DATA, l.kind)
         self.assertEqual('foo: bar', l.text)
@@ -173,7 +173,7 @@ class LexerTestCase(unittest.TestCase):
         self.assertIsNone(l.header)
 
     def test_parse_data_line_with_space(self):
-        lexer = configwriter.Lexer()
+        lexer = configwriter.Parser()
         l = lexer.parse_line('  foo= bar')
         self.assertEqual(l.KIND_DATA, l.kind)
         self.assertEqual('  foo= bar', l.text)
@@ -182,7 +182,7 @@ class LexerTestCase(unittest.TestCase):
         self.assertIsNone(l.header)
 
     def test_parse_data_line_with_comment(self):
-        lexer = configwriter.Lexer()
+        lexer = configwriter.Parser()
         l = lexer.parse_line('foo: bar  # baz')
         self.assertEqual(l.KIND_DATA, l.kind)
         self.assertEqual('foo: bar  # baz', l.text)
@@ -191,7 +191,7 @@ class LexerTestCase(unittest.TestCase):
         self.assertIsNone(l.header)
 
     def test_section_line(self):
-        lexer = configwriter.Lexer()
+        lexer = configwriter.Parser()
         l = lexer.parse_line('[foo]')
         self.assertEqual(l.KIND_HEADER, l.kind)
         self.assertEqual('[foo]', l.text)
@@ -200,7 +200,7 @@ class LexerTestCase(unittest.TestCase):
         self.assertEqual('foo', l.header)
 
     def test_section_line_with_space(self):
-        lexer = configwriter.Lexer()
+        lexer = configwriter.Parser()
         l = lexer.parse_line('[foo]   ')
         self.assertEqual(l.KIND_HEADER, l.kind)
         self.assertEqual('[foo]   ', l.text)
@@ -209,7 +209,7 @@ class LexerTestCase(unittest.TestCase):
         self.assertEqual('foo', l.header)
 
     def test_section_line_with_comment(self):
-        lexer = configwriter.Lexer()
+        lexer = configwriter.Parser()
         l = lexer.parse_line('[foo]#bar')
         self.assertEqual(l.KIND_HEADER, l.kind)
         self.assertEqual('[foo]#bar', l.text)
@@ -218,11 +218,11 @@ class LexerTestCase(unittest.TestCase):
         self.assertEqual('foo', l.header)
 
     def test_parse_invalid_line(self):
-        lexer = configwriter.Lexer()
+        lexer = configwriter.Parser()
         self.assertRaises(ValueError, lexer.parse_line, ' foo')
 
     def test_parse_lines(self):
-        lexer = configwriter.Lexer()
+        lexer = configwriter.Parser()
         lines = list(lexer.parse([
             '  # Initial comment',
             '[foo]  # First section',

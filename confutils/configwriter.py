@@ -7,7 +7,7 @@ from __future__ import absolute_import, unicode_literals
 import re
 
 
-class Lexer(object):
+class Parser(object):
     """Lex file lines into ConfigLine objects."""
     re_section_header = re.compile(r'^\[([\w._-]+)\]\s*(#.*)?$')
     re_blank_line = re.compile(r'^\s*(#.*)?$')
@@ -289,7 +289,7 @@ class ConfigFile(object):
 
     def parse(self, fileobj, parser=None):
         """Fill from a file-like object."""
-        parser = parser or Lexer()
+        parser = parser or Parser()
         for line in parser.parse(fileobj):
             self.handle_line(line)
 
