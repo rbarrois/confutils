@@ -252,6 +252,10 @@ class ConfigFile(object):
             self.sections[name] = section
             return section
 
+    def __contains__(self, name):
+        """Check whether a given name is a known section."""
+        return name in self.sections
+
     # Accessing values
     # ================
 
@@ -262,6 +266,19 @@ class ConfigFile(object):
         except KeyError:
             return []
         return section.find_lines(line)
+
+    def iter_lines(self, section):
+        """Iterate over all lines in a section.
+
+        This will skip 'header' lines.
+
+        Raises:
+            KeyError if the section doesn't exist in the ConfigFile.
+        """
+        section = self._get_section(section, create=False)
+        for block in section:
+            for line in block:
+                yield line
 
     # Filling from lines
     # ==================
@@ -336,6 +353,16 @@ class ConfigFile(object):
 
     def _make_line(self, key, value=None):
         return ConfigLine(ConfigLine.KIND_DATA, key=key, value=value)
+
+    def items(self, section):
+        """Retrieve all key/value pairs for a given section.
+
+        Raises:
+            KeyError if the section name is unknown
+        """
+        for line in self.iter_lines(section):
+            if line.kind == ConfigLine.KIND_DATA:
+                yield line.key, line.value
 
     def get(self, section, key):
         """Return the 'value' of all lines matching the section/key.

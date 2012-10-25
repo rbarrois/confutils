@@ -809,6 +809,48 @@ class ConfigFileTestCase(unittest.TestCase):
         lines = list(c.get_line('foo', self.l4))
         self.assertEqual([self.l1], lines)
 
+    def test_iter_lines_empty(self):
+        c = configfile.ConfigFile()
+        with self.assertRaises(KeyError):
+            list(c.iter_lines('foo'))
+
+    def test_iter_lines(self):
+        c = configfile.ConfigFile()
+        c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.enter_block('bar')
+        c.insert_line(self.l3)
+
+        lines = list(c.iter_lines('foo'))
+        self.assertEqual([self.l1], lines)
+
+        lines = list(c.iter_lines('bar'))
+        self.assertEqual([self.l3], lines)
+
+    def test_iter_lines_repeated(self):
+        c = configfile.ConfigFile()
+        c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.enter_block('bar')
+        c.insert_line(self.l3)
+
+        lines = list(c.iter_lines('foo'))
+        self.assertEqual([self.l1], lines)
+
+        lines = list(c.iter_lines('foo'))
+        self.assertEqual([self.l1], lines)
+
+    def test_contains_empty(self):
+        c = configfile.ConfigFile()
+        self.assertNotIn('foo', c)
+        self.assertEqual({}, c.sections)
+
+    def test_contains(self):
+        c = configfile.ConfigFile()
+        c.enter_block('foo')
+        self.assertNotIn('bar', c)
+        self.assertIn('foo', c)
+
     def test_add_line_empty(self):
         c = configfile.ConfigFile()
         block = c.add_line('foo', self.l1)
@@ -1110,6 +1152,41 @@ class ConfigFileTestCase(unittest.TestCase):
         self.assertEqual([block], c.blocks)
         self.assertEqual(block, c.current_block)
         self.assertEqual([self.l3], list(block))
+
+    def test_items_empty(self):
+        c = configfile.ConfigFile()
+        with self.assertRaises(KeyError):
+            list(c.items('foo'))
+
+    def test_items(self):
+        c = configfile.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l2)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+        c.enter_block('bar')
+        c.insert_line(self.l1)
+        c.insert_line(self.l1)
+
+        items = list(c.items('foo'))
+        self.assertEqual([('x', '42'), ('x', '13'), ('x', '42')], items)
+
+    def test_items_repeated(self):
+        c = configfile.ConfigFile()
+        block = c.enter_block('foo')
+        c.insert_line(self.l1)
+        c.insert_line(self.l3)
+        c.insert_line(self.l1)
+        c.enter_block('bar')
+        c.insert_line(self.l1)
+        c.insert_line(self.l1)
+
+        items = list(c.items('foo'))
+        self.assertEqual([('x', '42'), ('x', '13'), ('x', '42')], items)
+
+        items = list(c.items('foo'))
+        self.assertEqual([('x', '42'), ('x', '13'), ('x', '42')], items)
 
     def test_iter_empty(self):
         c = configfile.ConfigFile()
