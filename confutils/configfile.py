@@ -224,6 +224,96 @@ class Section(object):
         return '<Section: %s>' % self.name
 
 
+class BaseSectionView(object):
+    def __init__(self, configfile, name):
+        self.configfile = configfile
+        self.name = name
+
+    def __getitem__(self, key):
+        raise NotImplementedError()
+
+    def __setitem__(self, key, value):
+        raise NotImplementedError()
+
+    def __delitem__(self, key):
+        raise NotImplementedError()
+
+    def items(self):
+        raise NotImplementedError()
+
+    def __contains__(self, key):
+        try:
+            self[key]
+            return True
+        except KeyError:
+            return False
+
+    def setdefault(self, key, default=None):
+        if key not in self:
+            self[key] = default
+        return self[key]
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    class __NoDefault(object):
+        pass
+
+
+    def pop(self, key, default=__NoDefault):
+        try:
+            prev = self[key]
+        except KeyError:
+            if default == __NoDefault:
+                raise
+            else:
+                return default
+
+        del self[key]
+        return prev
+
+    def __repr__(self):
+        return '<%s: %r->%s>' % (self.__class__.__name__,
+            self.configfile, self.name)
+
+
+class SingleValuedSectionView(BaseSectionView):
+    def __getitem__(self, key):
+        return self.configfile.get_one(self.name, key)
+
+    def __setitem__(self, key, value):
+        self.configfile.add_or_update(self.name, key, value)
+
+    def __delitem__(self, key):
+        removed = self.configfile.remove(self.name, key)
+        if not removed:
+            raise KeyError("No line matching %r in %r" % (key, self))
+
+    def items(self):
+        d = dict(self.configfile.items(self.name))
+        return d.items()
+
+
+class MultiValuedSectionView(BaseSectionView):
+    def __getitem__(self, key):
+        return self.configfile.get(self.name, key)
+
+    def __setitem__(self, key, value):
+        self.configfile.update(self.name, key, value)
+
+    def __delitem__(self, key):
+        self.configfile.remove(self.name, key)
+
+    def items(self):
+        d = dict()
+        for k, v in self.configfile.items(self.name):
+            d.setdefault(k, []).append(v)
+        return d.items()
+
+
 class ConfigFile(object):
     """A (hopefully writable) config file.
 
