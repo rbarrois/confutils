@@ -1268,3 +1268,36 @@ class ConfigFileTestCase(unittest.TestCase):
         c.parse(lines)
         out_lines = list(c)
         self.assertEqual(lines, [str(l) for l in out_lines])
+
+
+class SingleValuedSectionViewTestCase(unittest.TestCase):
+    def _make_filled_configfile(self):
+        self.l1 = configfile.ConfigLine(configfile.ConfigLine.KIND_DATA,
+            key='x', value='13')
+        self.l2 = configfile.ConfigLine(configfile.ConfigLine.KIND_DATA,
+            key='y', value='14')
+        self.l3 = configfile.ConfigLine(configfile.ConfigLine.KIND_DATA,
+            key='z', value='2')
+        self.l4 = configfile.ConfigLine(configfile.ConfigLine.KIND_DATA,
+            key='x', value='42')
+
+        cf = configfile.ConfigFile()
+        cf.enter_block('foo')
+        cf.insert_line(self.l1)
+        cf.insert_line(self.l2)
+
+        cf.enter_block('bar')
+        cf.insert_line(self.l2)
+        cf.insert_line(self.l4)
+
+        cf.enter_block('foo')
+        cf.insert_line(self.l3)
+        return cf
+
+    def setUp(self):
+        self.empty_cf = configfile.ConfigFile()
+        self.nonempty_cf = self._make_filled_configfile()
+
+    def test_get(self):
+        view = self.empty_cf.section_view('foo')
+        self.assertEqual([], view.items())

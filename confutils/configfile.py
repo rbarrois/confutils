@@ -6,6 +6,7 @@ from __future__ import absolute_import, unicode_literals
 
 import re
 
+from . import helpers
 
 class Parser(object):
     """Lex file lines into ConfigLine objects."""
@@ -224,56 +225,16 @@ class Section(object):
         return '<Section: %s>' % self.name
 
 
-class BaseSectionView(object):
+class BaseSectionView(helpers.DictMixin):
+    """Expose a section as a dict.
+
+    Attributes:
+        configfile (ConfigFile): the underlying configfile
+        name (str): the name of the section
+    """
     def __init__(self, configfile, name):
         self.configfile = configfile
         self.name = name
-
-    def __getitem__(self, key):
-        raise NotImplementedError()
-
-    def __setitem__(self, key, value):
-        raise NotImplementedError()
-
-    def __delitem__(self, key):
-        raise NotImplementedError()
-
-    def items(self):
-        raise NotImplementedError()
-
-    def __contains__(self, key):
-        try:
-            self[key]
-            return True
-        except KeyError:
-            return False
-
-    def setdefault(self, key, default=None):
-        if key not in self:
-            self[key] = default
-        return self[key]
-
-    def get(self, key, default=None):
-        try:
-            return self[key]
-        except KeyError:
-            return default
-
-    class __NoDefault(object):
-        pass
-
-
-    def pop(self, key, default=__NoDefault):
-        try:
-            prev = self[key]
-        except KeyError:
-            if default == __NoDefault:
-                raise
-            else:
-                return default
-
-        del self[key]
-        return prev
 
     def __repr__(self):
         return '<%s: %r->%s>' % (self.__class__.__name__,
@@ -292,7 +253,7 @@ class SingleValuedSectionView(BaseSectionView):
         if not removed:
             raise KeyError("No line matching %r in %r" % (key, self))
 
-    def items(self):
+    def iteritems(self):
         d = dict(self.configfile.items(self.name))
         return d.items()
 
@@ -307,11 +268,11 @@ class MultiValuedSectionView(BaseSectionView):
     def __delitem__(self, key):
         self.configfile.remove(self.name, key)
 
-    def items(self):
+    def iteritems(self):
         d = dict()
         for k, v in self.configfile.items(self.name):
             d.setdefault(k, []).append(v)
-        return d.items()
+        return d.iteritems()
 
 
 class ConfigFile(object):
@@ -499,6 +460,13 @@ class ConfigFile(object):
     def remove(self, section, key, value=None):
         line = self._make_line(key, value)
         return self.remove_line(section, line)
+
+    # Views
+    # =====
+
+    def section_view(self, section, multi_value=False):
+        view_class = MultiValuedSectionView if multi_value else SingleValuedSectionView
+        return view_class(self, section)
 
     # Regenerating file
     # =================
