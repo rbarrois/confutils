@@ -6,6 +6,7 @@ from __future__ import absolute_import, unicode_literals
 
 import re
 
+from . import compat
 from . import helpers
 
 class Parser(object):
@@ -300,7 +301,7 @@ class MultiValuedSectionView(BaseSectionView):
         d = dict()
         for k, v in self.configfile.items(self.name):
             d.setdefault(k, []).append(v)
-        return d.iteritems()
+        return compat.iteritems(d)
 
 
 class ConfigFile(object):
@@ -458,7 +459,7 @@ class ConfigFile(object):
         """
         lines = iter(self.get(section, key))
         try:
-            return lines.next()
+            return next(lines)
         except StopIteration:
             raise KeyError("Key %s not found in %s" % (key, section))
 
