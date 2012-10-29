@@ -1296,6 +1296,162 @@ class SingleValuedSectionViewTestCase(unittest.TestCase):
         self.empty_cf = configfile.ConfigFile()
         self.nonempty_cf = self._make_filled_configfile()
 
-    def test_get(self):
+    def test_repr(self):
+        view_foo = self.empty_cf.section_view('foo')
+        self.assertIn('foo', repr(view_foo))
+        view_baz = self.empty_cf.section_view('baz')
+        self.assertIn('baz', repr(view_baz))
+
+    def test_get_empty(self):
         view = self.empty_cf.section_view('foo')
         self.assertEqual([], view.items())
+        with self.assertRaises(KeyError):
+            view['x']
+
+        self.assertIsNone(view.get('x'))
+        self.assertEqual(13, view.get('x', 13))
+
+    def test_get_nonempty(self):
+        view = self.nonempty_cf.section_view('foo')
+        self.assertEqual([('x', '13'), ('y', '14'), ('z', '2')], sorted(view.items()))
+        self.assertEqual('13', view['x'])
+        self.assertEqual('14', view['y'])
+        self.assertEqual('2', view['z'])
+        self.assertEqual('13', view.get('x', 42))
+        self.assertIsNone(view.get('t'))
+
+    def test_set_empty(self):
+        view = self.empty_cf.section_view('foo')
+
+        self.assertEqual([], view.items())
+        view['x'] = '13'
+        self.assertEqual([('x', '13')], view.items())
+        self.assertIn('foo', self.empty_cf)
+        self.assertEqual([self.l1], list(self.empty_cf.sections['foo'].extra_block))
+
+    def test_update(self):
+        view = self.nonempty_cf.section_view('foo')
+        view['x'] = '42'
+        self.assertEqual([('x', '42'), ('y', '14'), ('z', '2')], sorted(view.items()))
+        self.assertEqual([self.l4, self.l2], list(self.nonempty_cf.blocks[0]))
+        # Didn't touch other sections
+        self.assertEqual([self.l2, self.l4], list(self.nonempty_cf.blocks[1]))
+
+    def test_del_empty(self):
+        view = self.empty_cf.section_view('foo')
+        with self.assertRaises(KeyError):
+            del view['x']
+
+    def test_del_nonempty(self):
+        view = self.nonempty_cf.section_view('foo')
+        del view['x']
+        self.assertEqual([self.l2], list(self.nonempty_cf.blocks[0]))
+        # Didn't touch other sections
+        self.assertEqual([self.l2, self.l4], list(self.nonempty_cf.blocks[1]))
+
+
+class MultiValuedSectionViewTestCase(unittest.TestCase):
+    def _make_filled_configfile(self):
+        self.l1 = configfile.ConfigLine(configfile.ConfigLine.KIND_DATA,
+            key='x', value='13')
+        self.l2 = configfile.ConfigLine(configfile.ConfigLine.KIND_DATA,
+            key='y', value='14')
+        self.l3 = configfile.ConfigLine(configfile.ConfigLine.KIND_DATA,
+            key='z', value='2')
+        self.l4 = configfile.ConfigLine(configfile.ConfigLine.KIND_DATA,
+            key='x', value='42')
+        self.l5 = configfile.ConfigLine(configfile.ConfigLine.KIND_DATA,
+            key='x', value='15')
+
+        cf = configfile.ConfigFile()
+        cf.enter_block('foo')
+        cf.insert_line(self.l1)
+        cf.insert_line(self.l2)
+        cf.insert_line(self.l1)
+
+        cf.enter_block('bar')
+        cf.insert_line(self.l2)
+        cf.insert_line(self.l4)
+
+        cf.enter_block('foo')
+        cf.insert_line(self.l3)
+        cf.insert_line(self.l4)
+        return cf
+
+    def setUp(self):
+        self.empty_cf = configfile.ConfigFile()
+        self.nonempty_cf = self._make_filled_configfile()
+
+    def test_repr(self):
+        view_foo = self.empty_cf.section_view('foo', multi_value=True)
+        self.assertIn('foo', repr(view_foo))
+        view_baz = self.empty_cf.section_view('baz', multi_value=True)
+        self.assertIn('baz', repr(view_baz))
+
+    def test_get_empty(self):
+        view = self.empty_cf.section_view('foo', multi_value=True)
+        self.assertEqual([], view.items())
+        with self.assertRaises(KeyError):
+            view['x']
+
+        self.assertIsNone(view.get('x'))
+        self.assertEqual(13, view.get('x', 13))
+
+    def test_get_nonempty(self):
+        view = self.nonempty_cf.section_view('foo', multi_value=True)
+        self.assertEqual([
+            ('x', ['13', '13', '42']),
+            ('y', ['14']),
+            ('z', ['2']),
+        ], sorted(view.items()))
+        self.assertEqual(['13', '13', '42'], list(view['x']))
+        self.assertEqual(['14'], list(view['y']))
+        self.assertEqual(['2'], list(view['z']))
+        self.assertIsNone(view.get('t'))
+
+    def test_set_empty(self):
+        view = self.empty_cf.section_view('foo', multi_value=True)
+
+        self.assertEqual([], view.items())
+        view['x'] = ['13']
+        self.assertEqual([('x', ['13'])], view.items())
+        self.assertIn('foo', self.empty_cf)
+        self.assertEqual([self.l1], list(self.empty_cf.sections['foo'].extra_block))
+
+    def test_add(self):
+        view = self.nonempty_cf.section_view('foo', multi_value=True)
+        view['x'] = ['13', '15', '42']
+        self.assertEqual([
+            ('x', ['13', '13', '42', '15']),
+            ('y', ['14']),
+            ('z', ['2']),
+        ], sorted(view.items()))
+        self.assertEqual([self.l1, self.l2, self.l1], list(self.nonempty_cf.blocks[0]))
+        self.assertEqual([self.l3, self.l4, self.l5], list(self.nonempty_cf.blocks[2]))
+        # Didn't touch other sections
+        self.assertEqual([self.l2, self.l4], list(self.nonempty_cf.blocks[1]))
+
+    def test_update(self):
+        view = self.nonempty_cf.section_view('foo', multi_value=True)
+        view['x'] = ['13', '15']
+        self.assertEqual([
+            ('x', ['13', '13', '15']),
+            ('y', ['14']),
+            ('z', ['2']),
+        ], sorted(view.items()))
+        self.assertEqual([self.l1, self.l2, self.l1], list(self.nonempty_cf.blocks[0]))
+        self.assertEqual([self.l3, self.l5], list(self.nonempty_cf.blocks[2]))
+        # Didn't touch other sections
+        self.assertEqual([self.l2, self.l4], list(self.nonempty_cf.blocks[1]))
+
+    def test_del_empty(self):
+        view = self.empty_cf.section_view('foo', multi_value=True)
+        with self.assertRaises(KeyError):
+            del view['x']
+
+    def test_del_nonempty(self):
+        view = self.nonempty_cf.section_view('foo', multi_value=True)
+        del view['x']
+        self.assertEqual([self.l2], list(self.nonempty_cf.blocks[0]))
+        # Didn't touch other sections
+        self.assertEqual([self.l2, self.l4], list(self.nonempty_cf.blocks[1]))

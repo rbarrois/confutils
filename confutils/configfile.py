@@ -260,13 +260,23 @@ class SingleValuedSectionView(BaseSectionView):
 
 class MultiValuedSectionView(BaseSectionView):
     def __getitem__(self, key):
-        return self.configfile.get(self.name, key)
+        entries = list(self.configfile.get(self.name, key))
+        if not entries:
+            raise KeyError("No value defined for key %r in %r" % (key, self))
+        return entries
 
-    def __setitem__(self, key, value):
-        self.configfile.update(self.name, key, value)
+    def __setitem__(self, key, values):
+        old_values = frozenset(self.get(key, []))
+        new_values = frozenset(values)
+        for removed in old_values - new_values:
+            self.configfile.remove(self.name, key, removed)
+        for added in new_values - old_values:
+            self.configfile.add(self.name, key, added)
 
     def __delitem__(self, key):
-        self.configfile.remove(self.name, key)
+        removed = self.configfile.remove(self.name, key)
+        if not removed:
+            raise KeyError("No value defined for key %r in %r" % (key, self))
 
     def iteritems(self):
         d = dict()
