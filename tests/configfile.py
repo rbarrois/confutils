@@ -811,8 +811,7 @@ class ConfigFileTestCase(unittest.TestCase):
 
     def test_iter_lines_empty(self):
         c = configfile.ConfigFile()
-        with self.assertRaises(KeyError):
-            list(c.iter_lines('foo'))
+        self.assertEqual([], list(c.iter_lines('foo')))
 
     def test_iter_lines(self):
         c = configfile.ConfigFile()
@@ -1155,8 +1154,7 @@ class ConfigFileTestCase(unittest.TestCase):
 
     def test_items_empty(self):
         c = configfile.ConfigFile()
-        with self.assertRaises(KeyError):
-            list(c.items('foo'))
+        self.assertEqual([], list(c.items('foo')))
 
     def test_items(self):
         c = configfile.ConfigFile()

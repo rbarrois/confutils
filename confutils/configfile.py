@@ -322,11 +322,12 @@ class ConfigFile(object):
         """Iterate over all lines in a section.
 
         This will skip 'header' lines.
-
-        Raises:
-            KeyError if the section doesn't exist in the ConfigFile.
         """
-        section = self._get_section(section, create=False)
+        try:
+            section = self._get_section(section, create=False)
+        except KeyError:
+            return
+
         for block in section:
             for line in block:
                 yield line
@@ -406,11 +407,7 @@ class ConfigFile(object):
         return ConfigLine(ConfigLine.KIND_DATA, key=key, value=value)
 
     def items(self, section):
-        """Retrieve all key/value pairs for a given section.
-
-        Raises:
-            KeyError if the section name is unknown
-        """
+        """Retrieve all key/value pairs for a given section."""
         for line in self.iter_lines(section):
             if line.kind == ConfigLine.KIND_DATA:
                 yield line.key, line.value
