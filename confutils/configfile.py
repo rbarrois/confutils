@@ -236,12 +236,17 @@ class BaseSectionView(helpers.DictMixin):
         self.configfile = configfile
         self.name = name
 
+    def add(self, key, value):
+        """Add a new value for a key."""
+        self[key] = value
+
     def __repr__(self):
         return '<%s: %r->%s>' % (self.__class__.__name__,
             self.configfile, self.name)
 
 
 class SingleValuedSectionView(BaseSectionView):
+
     def __getitem__(self, key):
         return self.configfile.get_one(self.name, key)
 
@@ -259,6 +264,10 @@ class SingleValuedSectionView(BaseSectionView):
 
 
 class MultiValuedSectionView(BaseSectionView):
+    """A SectionView where each key may have multiple values.
+
+    Always provide the list of expected values when setting.
+    """
     def __getitem__(self, key):
         entries = list(self.configfile.get(self.name, key))
         if not entries:
@@ -272,6 +281,15 @@ class MultiValuedSectionView(BaseSectionView):
             self.configfile.remove(self.name, key, removed)
         for added in new_values - old_values:
             self.configfile.add(self.name, key, added)
+
+    def add(self, key, value):
+        """Add a new value for a key.
+
+        This differs from __setitem__ in adding a new value instead of updating
+        the list of values, thus avoiding the need to fetch the previous list of
+        values.
+        """
+        self.configfile.add(self.name, key, value)
 
     def __delitem__(self, key):
         removed = self.configfile.remove(self.name, key)

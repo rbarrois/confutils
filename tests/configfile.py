@@ -1320,7 +1320,7 @@ class SingleValuedSectionViewTestCase(unittest.TestCase):
         self.assertEqual('13', view.get('x', 42))
         self.assertIsNone(view.get('t'))
 
-    def test_set_empty(self):
+    def test_setitem_empty(self):
         view = self.empty_cf.section_view('foo')
 
         self.assertEqual([], view.items())
@@ -1329,9 +1329,26 @@ class SingleValuedSectionViewTestCase(unittest.TestCase):
         self.assertIn('foo', self.empty_cf)
         self.assertEqual([self.l1], list(self.empty_cf.sections['foo'].extra_block))
 
-    def test_update(self):
+    def test_setitem_updates(self):
         view = self.nonempty_cf.section_view('foo')
         view['x'] = '42'
+        self.assertEqual([('x', '42'), ('y', '14'), ('z', '2')], sorted(view.items()))
+        self.assertEqual([self.l4, self.l2], list(self.nonempty_cf.blocks[0]))
+        # Didn't touch other sections
+        self.assertEqual([self.l2, self.l4], list(self.nonempty_cf.blocks[1]))
+
+    def test_add_empty(self):
+        view = self.empty_cf.section_view('foo')
+
+        self.assertEqual([], view.items())
+        view.add('x', '13')
+        self.assertEqual([('x', '13')], view.items())
+        self.assertIn('foo', self.empty_cf)
+        self.assertEqual([self.l1], list(self.empty_cf.sections['foo'].extra_block))
+
+    def test_add_updates(self):
+        view = self.nonempty_cf.section_view('foo')
+        view.add('x', '42')
         self.assertEqual([('x', '42'), ('y', '14'), ('z', '2')], sorted(view.items()))
         self.assertEqual([self.l4, self.l2], list(self.nonempty_cf.blocks[0]))
         # Didn't touch other sections
@@ -1418,7 +1435,7 @@ class MultiValuedSectionViewTestCase(unittest.TestCase):
         self.assertIn('foo', self.empty_cf)
         self.assertEqual([self.l1], list(self.empty_cf.sections['foo'].extra_block))
 
-    def test_add(self):
+    def test_setitem_adds(self):
         view = self.nonempty_cf.section_view('foo', multi_value=True)
         view['x'] = ['13', '15', '42']
         self.assertEqual([
@@ -1431,7 +1448,7 @@ class MultiValuedSectionViewTestCase(unittest.TestCase):
         # Didn't touch other sections
         self.assertEqual([self.l2, self.l4], list(self.nonempty_cf.blocks[1]))
 
-    def test_update(self):
+    def test_setitem_updates(self):
         view = self.nonempty_cf.section_view('foo', multi_value=True)
         view['x'] = ['13', '15']
         self.assertEqual([
@@ -1441,6 +1458,31 @@ class MultiValuedSectionViewTestCase(unittest.TestCase):
         ], sorted(view.items()))
         self.assertEqual([self.l1, self.l2, self.l1], list(self.nonempty_cf.blocks[0]))
         self.assertEqual([self.l3, self.l5], list(self.nonempty_cf.blocks[2]))
+        # Didn't touch other sections
+        self.assertEqual([self.l2, self.l4], list(self.nonempty_cf.blocks[1]))
+
+    def test_add_empty(self):
+        view = self.empty_cf.section_view('foo', multi_value=True)
+        self.assertEqual([], view.items())
+        view.add('x', '13')
+        self.assertEqual([('x', ['13'])], view.items())
+        self.assertIn('foo', self.empty_cf)
+        self.assertEqual([self.l1], list(self.empty_cf.sections['foo'].extra_block))
+
+    def test_add_nonempty(self):
+        view = self.nonempty_cf.section_view('foo', multi_value=True)
+        view.add('x', '15')
+        self.assertEqual([
+            ('x', ['13', '13', '42', '15']),
+            ('y', ['14']),
+            ('z', ['2']),
+        ], sorted(view.items()))
+        self.assertEqual(['13', '13', '42', '15'], list(view['x']))
+        self.assertEqual(['14'], list(view['y']))
+        self.assertEqual(['2'], list(view['z']))
+        self.assertIsNone(view.get('t'))
+        self.assertEqual([self.l1, self.l2, self.l1], list(self.nonempty_cf.blocks[0]))
+        self.assertEqual([self.l3, self.l4, self.l5], list(self.nonempty_cf.blocks[2]))
         # Didn't touch other sections
         self.assertEqual([self.l2, self.l4], list(self.nonempty_cf.blocks[1]))
 
