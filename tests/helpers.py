@@ -2,7 +2,7 @@
 # This code is distributed under the LGPLv3+ license.
 # Copyright (c) 2012 Raphaël Barrois
 
-from .compat import unittest
+from .compat import unittest, Py3
 
 from confutils import helpers
 
@@ -24,7 +24,10 @@ class DictMixinTestCase(unittest.TestCase):
                 del self.d[key]
 
             def iteritems(self):
-                return self.d.iteritems()
+                if Py3:
+                    return self.d.items()
+                else:
+                    return self.d.iteritems()
 
         self.MyDict = MyDict
 
