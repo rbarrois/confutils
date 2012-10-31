@@ -1,3 +1,10 @@
+v0.3.3 (31/10/2012)
+-------------------
+
+*New:*
+
+    * Add :meth:`~configfile.ConfigFile.write` method to :class:`~configfile.ConfigFile`.
+
 v0.3.2 (31/10/2012)
 -------------------
 
