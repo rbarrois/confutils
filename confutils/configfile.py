@@ -546,3 +546,8 @@ class ConfigFile(object):
                 yield section.extra_block.header_line()
                 for line in section.extra_block:
                     yield line
+
+    def write(self, fd):
+        """Write to an open file-like object."""
+        for line in self:
+            fd.write('%s\n' % line.text)

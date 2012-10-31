@@ -3,6 +3,7 @@
 # Copyright (c) 2012 Raphaël Barrois
 
 import tempfile
+import StringIO
 
 from .compat import unittest
 
@@ -1329,6 +1330,42 @@ class ConfigFileTestCase(unittest.TestCase):
         out_lines = list(c)
         self.assertEqual(lines, [str(l) for l in out_lines])
 
+    def test_write_empty(self):
+        f = StringIO.StringIO()
+        c = configfile.ConfigFile()
+        c.write(f)
+        self.assertEqual('', f.getvalue())
+
+    def test_write_usual(self):
+        c = configfile.ConfigFile()
+        c.insert_line(self.l1)
+        c.enter_block('foo')
+        c.insert_line(self.l3)
+        c.insert_line(self.l3)
+        c.enter_block('bar')
+        c.insert_line(self.l1)
+        c.insert_line(self.l1)
+
+        f = StringIO.StringIO()
+        c.write(f)
+        self.assertEqual("x: 42\n[foo]\nx: 13\nx: 13\n[bar]\nx: 42\nx: 42\n",
+            f.getvalue())
+
+    def test_write_idempotent(self):
+        lines = [
+            '# Comment before',
+            '[foo]',
+            'x: 13',
+            '',
+            '[bar]',
+            'x: 42',
+        ]
+        c = configfile.ConfigFile()
+        c.parse(lines)
+
+        f = StringIO.StringIO()
+        c.write(f)
+        self.assertEqual(''.join(l + '\n' for l in lines), f.getvalue())
 
 class SingleValuedSectionViewTestCase(unittest.TestCase):
     def _make_filled_configfile(self):
