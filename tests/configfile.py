@@ -165,6 +165,15 @@ class ParserTestCase(unittest.TestCase):
         self.assertIsNone(l.value)
         self.assertIsNone(l.header)
 
+    def test_parse_alt_commented_line(self):
+        lexer = configfile.Parser()
+        l = lexer.parse_line('# foo: bar')
+        self.assertEqual(l.KIND_BLANK, l.kind)
+        self.assertEqual('# foo: bar', l.text)
+        self.assertIsNone(l.key)
+        self.assertIsNone(l.value)
+        self.assertIsNone(l.header)
+
     def test_parse_data_line(self):
         lexer = configfile.Parser()
         l = lexer.parse_line('foo: bar')

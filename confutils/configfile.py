@@ -34,6 +34,10 @@ class Parser(object):
             yield self.parse_line(line.rstrip('\n'), rank=rank, name_hint=name_hint)
 
     def parse_line(self, line, rank=0, name_hint=''):
+        blank_match = self.re_blank_line.match(line)
+        if blank_match:
+            return ConfigLine(ConfigLine.KIND_BLANK, text=line)
+
         header_match = self.re_section_header.match(line)
         if header_match:
             header = header_match.groups()[0]
@@ -44,10 +48,6 @@ class Parser(object):
             key, value = data_match.groups()
             return ConfigLine(ConfigLine.KIND_DATA, key=key.strip(),
                     value=value.strip(), text=line)
-
-        blank_match = self.re_blank_line.match(line)
-        if blank_match:
-            return ConfigLine(ConfigLine.KIND_BLANK, text=line)
 
         raise ValueError("Invalid line %s at %s:%d" % (line, name_hint, rank))
 
