@@ -4,10 +4,24 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import os
 import re
 
 from . import compat
 from . import helpers
+
+
+class ConfigError(Exception):
+    """Base exception for ConfigFile-related errors."""
+
+
+class ConfigReadingError(ConfigError):
+    """Errors encountered when reading a file."""
+
+
+class ConfigWritingError(ConfigError):
+    """Errors encountered when writing a config file."""
+
 
 class Parser(object):
     """Lex file lines into ConfigLine objects."""
@@ -17,7 +31,7 @@ class Parser(object):
 
     def parse(self, lines, name_hint=''):
         for rank, line in enumerate(lines):
-            yield self.parse_line(line, rank=rank, name_hint=name_hint)
+            yield self.parse_line(line.rstrip('\n'), rank=rank, name_hint=name_hint)
 
     def parse_line(self, line, rank=0, name_hint=''):
         header_match = self.re_section_header.match(line)
@@ -390,6 +404,19 @@ class ConfigFile(object):
         parser = parser or Parser()
         for line in parser.parse(fileobj, name_hint=name_hint):
             self.handle_line(line)
+
+    def parse_file(self, filename, skip_unreadable=False, **kwargs):
+        """Parse a file from its name (instead of fds).
+
+        If skip_unreadable is False and the file can't be read, will raise a
+        ConfigReadingError.
+        """
+        if not os.access(filename, os.R_OK):
+            if skip_unreadable:
+                return
+            raise ConfigReadingError("Unable to open file %s." % filename)
+        with open(filename, 'rt') as f:
+            return self.parse(f, name_hint=filename, **kwargs)
 
     # Updating config content
     # =======================

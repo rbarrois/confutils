@@ -2,6 +2,8 @@
 # This code is distributed under the LGPLv3+ license.
 # Copyright (c) 2012 Raphaël Barrois
 
+import tempfile
+
 from .compat import unittest
 
 from confutils import configfile
@@ -785,6 +787,38 @@ class ConfigFileTestCase(unittest.TestCase):
         ], parser=MyParser())
         self.assertEqual({}, c.sections)
         self.assertEqual([self.l1, self.l1, self.l1], list(c.header))
+
+    def test_parse_file_nonexistent(self):
+        c = configfile.ConfigFile()
+
+        tmp = tempfile.NamedTemporaryFile()
+        name = tmp.name
+        tmp.close()
+
+        with self.assertRaises(configfile.ConfigReadingError):
+            c.parse_file(name)
+
+    def test_parse_file_nonexistent_skip_unreadable(self):
+        c = configfile.ConfigFile()
+
+        tmp = tempfile.NamedTemporaryFile()
+        name = tmp.name
+        tmp.close()
+
+        c.parse_file(name, skip_unreadable=True)
+        self.assertEqual({}, c.sections)
+        self.assertEqual([], c.blocks)
+
+    def test_parse_file_existent(self):
+        c = configfile.ConfigFile()
+        with tempfile.NamedTemporaryFile() as tmp:
+            tmp.write("[foo]\nx: 13\nx: 42\n")
+            tmp.flush()
+            c.parse_file(tmp.name)
+
+        self.assertIn('foo', c.sections)
+        self.assertEqual([c.current_block], c.blocks)
+        self.assertEqual([self.l3, self.l1], list(c.current_block))
 
     def test_get_line_undefined(self):
         c = configfile.ConfigFile()
