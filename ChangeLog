@@ -1,3 +1,11 @@
+v0.3.2 (31/10/2012)
+-------------------
+
+*Bugfix:*
+
+    * :class:`~configfile.ConfigFile`: A comment marker (``#``) takes precedence
+      over a 'data' line.
+
 v0.3.1 (31/10/2012)
 -------------------
 
