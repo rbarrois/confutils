@@ -401,6 +401,7 @@ class ConfigFile(object):
 
     def parse(self, fileobj, name_hint='', parser=None):
         """Fill from a file-like object."""
+        self.current_block = None  # Reset current block
         parser = parser or Parser()
         for line in parser.parse(fileobj, name_hint=name_hint):
             self.handle_line(line)

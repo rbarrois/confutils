@@ -820,6 +820,25 @@ class ConfigFileTestCase(unittest.TestCase):
         self.assertEqual([c.current_block], c.blocks)
         self.assertEqual([self.l3, self.l1], list(c.current_block))
 
+    def test_parse_files(self):
+        c = configfile.ConfigFile()
+        with tempfile.NamedTemporaryFile() as tmp1:
+            tmp1.write("# Blah\n[foo]\nx: 13\nx: 42\n")
+            tmp1.flush()
+            c.parse_file(tmp1.name)
+
+        with tempfile.NamedTemporaryFile() as tmp2:
+            tmp2.write("# Bar\n[bar]\nx: 42\nx: 13\n")
+            tmp2.flush()
+            c.parse_file(tmp2.name)
+
+        self.assertIn('foo', c.sections)
+        self.assertIn('bar', c.sections)
+        self.assertEqual(2, len(c.header))
+        self.assertEqual(2, len(c.blocks))
+        self.assertEqual([self.l3, self.l1], list(c.blocks[0]))
+        self.assertEqual([self.l1, self.l3], list(c.blocks[1]))
+
     def test_get_line_undefined(self):
         c = configfile.ConfigFile()
         c.enter_block('foo')
