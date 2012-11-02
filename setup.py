@@ -3,7 +3,7 @@
 # This code is distributed under the two-clause BSD license.
 # Copyright (c) 2012 Raphaël Barrois
 
-from setuptools import setup, find_packages
+from setuptools import setup
 import os
 import re
 
@@ -35,7 +35,7 @@ setup(
     keywords=['project', 'library', 'template'],
     url="http://github.com/rbarrois/confutils",
     download_url="http://pypi.python.org/pypi/confutils/",
-    packages=find_packages(),
+    packages=['confutils'],
     setup_requires=[
         'distribute',
     ],

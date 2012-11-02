@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 
 __author__ = "Raphaël Barrois <raphael.barrois+confutils@polytechnique.org>"
-__version__ = '0.3.4'
+__version__ = '0.3.5'
 
 from .configfile import ConfigFile, ConfigLine, Parser
 from .configfile import ConfigError, ConfigReadingError, ConfigWritingError
