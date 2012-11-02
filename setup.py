@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# This code is distributed under the LGPLv3+ license.
+# This code is distributed under the two-clause BSD license.
 # Copyright (c) 2012 Raphaël Barrois
 
 from setuptools import setup, find_packages
@@ -31,7 +31,7 @@ setup(
     author="Raphaël Barrois",
     author_email="raphael.barrois+confutils@polytechnique.org",
     description="Advanced configuration file utilities.",
-    license="LGPLv3+",
+    license="BSD",
     keywords=['project', 'library', 'template'],
     url="http://github.com/rbarrois/confutils",
     download_url="http://pypi.python.org/pypi/confutils/",
@@ -42,15 +42,13 @@ setup(
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
-        "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
-        "License :: OSI Approved :: GNU Library or Lesser General Public License (LGPL)",
+        "License :: OSI Approved :: BSD License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python",
         "Topic :: Software Development :: Libraries :: Python Modules",
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
     ],
     test_suite='tests',
 )

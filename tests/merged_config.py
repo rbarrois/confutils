@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# This code is distributed under the LGPLv3+ license.
+# This code is distributed under the two-clause BSD license.
 # Copyright (c) 2012 Raphaël Barrois
 
 from .compat import unittest
