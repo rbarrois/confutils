@@ -2,9 +2,11 @@
 # This code is distributed under the LGPLv3+ license.
 # Copyright (c) 2012 Raphaël Barrois
 
-import tempfile
-import StringIO
+from __future__ import unicode_literals
 
+import tempfile
+
+from .compat import io
 from .compat import unittest
 
 from confutils import configfile
@@ -821,7 +823,7 @@ class ConfigFileTestCase(unittest.TestCase):
 
     def test_parse_file_existent(self):
         c = configfile.ConfigFile()
-        with tempfile.NamedTemporaryFile() as tmp:
+        with tempfile.NamedTemporaryFile(mode='wt') as tmp:
             tmp.write("[foo]\nx: 13\nx: 42\n")
             tmp.flush()
             c.parse_file(tmp.name)
@@ -832,12 +834,12 @@ class ConfigFileTestCase(unittest.TestCase):
 
     def test_parse_files(self):
         c = configfile.ConfigFile()
-        with tempfile.NamedTemporaryFile() as tmp1:
+        with tempfile.NamedTemporaryFile(mode='wt') as tmp1:
             tmp1.write("# Blah\n[foo]\nx: 13\nx: 42\n")
             tmp1.flush()
             c.parse_file(tmp1.name)
 
-        with tempfile.NamedTemporaryFile() as tmp2:
+        with tempfile.NamedTemporaryFile(mode='wt') as tmp2:
             tmp2.write("# Bar\n[bar]\nx: 42\nx: 13\n")
             tmp2.flush()
             c.parse_file(tmp2.name)
@@ -1331,7 +1333,7 @@ class ConfigFileTestCase(unittest.TestCase):
         self.assertEqual(lines, [str(l) for l in out_lines])
 
     def test_write_empty(self):
-        f = StringIO.StringIO()
+        f = io.StringIO()
         c = configfile.ConfigFile()
         c.write(f)
         self.assertEqual('', f.getvalue())
@@ -1346,7 +1348,7 @@ class ConfigFileTestCase(unittest.TestCase):
         c.insert_line(self.l1)
         c.insert_line(self.l1)
 
-        f = StringIO.StringIO()
+        f = io.StringIO()
         c.write(f)
         self.assertEqual("x: 42\n[foo]\nx: 13\nx: 13\n[bar]\nx: 42\nx: 42\n",
             f.getvalue())
@@ -1363,7 +1365,7 @@ class ConfigFileTestCase(unittest.TestCase):
         c = configfile.ConfigFile()
         c.parse(lines)
 
-        f = StringIO.StringIO()
+        f = io.StringIO()
         c.write(f)
         self.assertEqual(''.join(l + '\n' for l in lines), f.getvalue())
 
