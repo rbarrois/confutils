@@ -1414,7 +1414,7 @@ class SingleValuedSectionViewTestCase(unittest.TestCase):
 
     def test_get_nonempty(self):
         view = self.nonempty_cf.section_view('foo')
-        self.assertEqual([('x', '13'), ('y', '14'), ('z', '2')], sorted(view.items()))
+        self.assertEqual([('x', '13'), ('y', '14'), ('z', '2')], view.items())
         self.assertEqual('13', view['x'])
         self.assertEqual('14', view['y'])
         self.assertEqual('2', view['z'])

@@ -274,8 +274,7 @@ class SingleValuedSectionView(BaseSectionView):
             raise KeyError("No line matching %r in %r" % (key, self))
 
     def iteritems(self):
-        d = dict(self.configfile.items(self.name))
-        return d.items()
+        return self.configfile.items(self.name)
 
 
 class MultiValuedSectionView(BaseSectionView):
