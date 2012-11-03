@@ -1,3 +1,18 @@
+v0.3.6 (03/11/2012)
+-------------------
+
+*New:*
+
+    * The order of SingleValuedSectionView/MultiValuedSectionView.items is now
+      deterministic
+
+v0.3.5 (02/11/2012)
+-------------------
+
+*Bugfix:*
+
+    * Fix setup.py
+
 v0.3.4 (02/11/2012)
 -------------------
 
