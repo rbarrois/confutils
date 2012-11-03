@@ -1369,6 +1369,7 @@ class ConfigFileTestCase(unittest.TestCase):
         c.write(f)
         self.assertEqual(''.join(l + '\n' for l in lines), f.getvalue())
 
+
 class SingleValuedSectionViewTestCase(unittest.TestCase):
     def _make_filled_configfile(self):
         self.l1 = configfile.ConfigLine(configfile.ConfigLine.KIND_DATA,
@@ -1521,7 +1522,7 @@ class MultiValuedSectionViewTestCase(unittest.TestCase):
             ('x', ['13', '13', '42']),
             ('y', ['14']),
             ('z', ['2']),
-        ], sorted(view.items()))
+        ], view.items())
         self.assertEqual(['13', '13', '42'], list(view['x']))
         self.assertEqual(['14'], list(view['y']))
         self.assertEqual(['2'], list(view['z']))

@@ -7,7 +7,6 @@ from __future__ import absolute_import, unicode_literals
 import os
 import re
 
-from . import compat
 from . import helpers
 
 
@@ -311,10 +310,14 @@ class MultiValuedSectionView(BaseSectionView):
             raise KeyError("No value defined for key %r in %r" % (key, self))
 
     def iteritems(self):
-        d = dict()
+        values = dict()
+        order = []
         for k, v in self.configfile.items(self.name):
-            d.setdefault(k, []).append(v)
-        return compat.iteritems(d)
+            values.setdefault(k, []).append(v)
+            if k not in order:
+                order.append(k)
+        for k in order:
+            yield k, values[k]
 
 
 class ConfigFile(object):
