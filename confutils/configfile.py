@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # This code is distributed under the two-clause BSD license.
-# Copyright (c) 2012 Raphaël Barrois
+# Copyright (c) 2012-2013 Raphaël Barrois
 
 from __future__ import absolute_import, unicode_literals
 
