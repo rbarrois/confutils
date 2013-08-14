@@ -37,7 +37,7 @@ setup(
     download_url="http://pypi.python.org/pypi/confutils/",
     packages=['confutils'],
     setup_requires=[
-        'distribute',
+        'setuptools>=0.8',
     ],
     classifiers=[
         "Development Status :: 4 - Beta",
