@@ -1,4 +1,4 @@
-include LICENSE README requirements.txt
+include LICENSE README.rst requirements.txt
 include doc/Makefile doc/make.bat
 recursive-include doc *.py *.rst
 include doc/_static/.keep_dir
